@@ -37,7 +37,7 @@ namespace Crate {
         
         void turn_right();
 
-		Projectile* fire(float);
+		Projectile* fire(float, Crate *);
 
 		void update_camera();
 
@@ -59,8 +59,13 @@ namespace Crate {
 
 		void switch_rotation_angle();
 
+		bool has_shot(){
+            return shot;
+            
+        }
 		
-		
+        void reset_shot();
+        
 		Cannon cannon;
         
 private:
@@ -91,6 +96,8 @@ private:
         
         // Level 4
         // A stationary Crate has no controls
+        
+        bool shot;
     };
     
 }

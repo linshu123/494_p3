@@ -13,10 +13,13 @@ namespace Crate {
     
 	enum weapon_type {SPRINKLE, MM, CHOCOLATE, CANDLE, WEAPON_SIZE};
 
-
+    class Crate;
+    
+    
 	class Projectile {
     public:
-        Projectile(const Zeni::Point3f &corner_ = Zeni::Point3f(0.0f, 0.0f, 0.0f),
+        Projectile(Crate *player_,
+                   const Zeni::Point3f &corner_ = Zeni::Point3f(0.0f, 0.0f, 0.0f),
               const Zeni::Vector3f &scale_ = Zeni::Vector3f(1.0f, 1.0f, 1.0f),
               const Zeni::Quaternion &rotation_ = Zeni::Quaternion::Axis_Angle(Zeni::Vector3f(0.0f, 0.0f, 1.0f), 0.0f), 
 			  weapon_type weap = SPRINKLE);
@@ -50,6 +53,14 @@ namespace Crate {
 		float explosion_size(){
 			return explosion_radius;
 		}
+        
+        Zeni::Point3f get_location(){
+            return m_corner;
+        }
+        
+        Zeni::Vector3f get_velocity(){
+            return m_velocity;
+        }
 		
 private:
         void create_body();
@@ -77,6 +88,10 @@ private:
         
         // Level 4
         // A stationary Projectile has no controls
+        
+        
+        Crate *player;
+        
     };
     
 }

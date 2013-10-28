@@ -35,12 +35,14 @@ namespace Crate {
         
         void render();
         
+        void update_bullet_camera();
+        
     private:
         void partial_step(const float &time_step, const Zeni::Vector3f &velocity);
         
         Zeni::Time_HQ time_passed;
         
-        Crate m_tank;
+//        Crate m_tank;
 		std::vector<Crate> players;
 		std::list<Projectile*> bullets;
 		//std::list<int> tree;
@@ -71,6 +73,7 @@ namespace Crate {
 		std::vector<std::string> weapon_list;
 		//Zeni::Text_Box display_power;
 		std::map<std::string, Zeni::Text_Box *> text_map;
+//        Projectile * current_bullet;
     };
     
 }

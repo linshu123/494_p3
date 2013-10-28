@@ -32,7 +32,7 @@ namespace Crate {
 	m_fire(false),
 	m_switch(false),
 	curr_player(0),
-	num_players(2),
+	num_players(5),
 	cannon_down(false),
 	cannon_left(false),
 	cannon_right(false),
@@ -43,6 +43,7 @@ namespace Crate {
 	switch_weapon(false),
 	camera_reset(false),
 	game_size(Point3f(4096.0f, 4096.0f, 2048.0f))
+//    current_bullet(nullptr)
     {
 		
 		text_map[power_str] = new Text_Box(Point2f(0, 0), Point2f(200, 20), "system_36_800x600", "Power:", Color());
@@ -56,10 +57,13 @@ namespace Crate {
 			pair.second->give_BG_Renderer(new Widget_Renderer_Color(Color(0,0,0,0)));
 		}
 		//auto colors = get_Colors();
-		for (int i = 0 ; i < num_players; ++i){
+        
+		for (int i = 0 ; i < num_players + 1; ++i){
 			players.push_back(Crate(Point3f(0.0f + 100 * i, 0.0f + 100 * i, 0.0f),
               Vector3f(30.0f, 30.0f, 30.0f)));
 		}
+        players.erase(players.begin());
+    
 		// "Sprinkle", "M & M", "Chocolate chip", "Candle"
 		weapon_list.push_back("Sprinkle");
 		weapon_list.push_back("M & M");
@@ -79,28 +83,22 @@ namespace Crate {
         switch(event.keysym.sym) {
             case SDLK_UP:
                 m_forward = event.type == SDL_KEYDOWN;
-					
 				move_release = event.type == SDL_KEYUP;
                 break;
             case SDLK_DOWN:
-//                players[curr_player].move_back();
                 m_backward = event.type == SDL_KEYDOWN;
 				move_release = event.type == SDL_KEYUP;
                 break;
                 
             case SDLK_LEFT:
                 m_rotate_left = event.type == SDL_KEYDOWN;
-
-//                players[curr_player].turn_left();
                 break;
                 
             case SDLK_RIGHT:
                 m_rotate_right = event.type == SDL_KEYDOWN;
-//                players[curr_player].turn_right();
                 break;
                 
 			case SDLK_RETURN:
-				//m_fire = event.type == SDL_KEYDOWN;
 				break;
                 
 			case SDLK_t:
@@ -123,19 +121,19 @@ namespace Crate {
 				cannon_right = event.type == SDL_KEYDOWN;
 				break;
             case SDLK_w:
-                m_controls.forward = event.type == SDL_KEYDOWN;
+//                m_controls.forward = event.type == SDL_KEYDOWN;
                 break;
                 
             case SDLK_a:
-                m_controls.left = event.type == SDL_KEYDOWN;
+//                m_controls.left = event.type == SDL_KEYDOWN;
                 break;
                 
             case SDLK_s:
-                m_controls.back = event.type == SDL_KEYDOWN;
+//                m_controls.back = event.type == SDL_KEYDOWN;
                 break;
                 
             case SDLK_d:
-                m_controls.right = event.type == SDL_KEYDOWN;
+//                m_controls.right = event.type == SDL_KEYDOWN;
                 break;
                 
 			case SDLK_o:
@@ -214,7 +212,10 @@ namespace Crate {
 			
 			shot_power.stop();
 			shot_power.reset();
-			bullets.push_back(players[curr_player].fire(pow));
+//			bullets.push_back(players[curr_player].fire(pow));
+//            if (current_bullet)
+//                delete current_bullet;
+            bullets.push_back(players[curr_player].fire(pow, &players[curr_player]));
 			m_fire = false;
 		}
 
@@ -252,6 +253,7 @@ namespace Crate {
 				curr_player++;
 				curr_player %= num_players;
 			}
+            players[curr_player].reset_shot();
 			players[curr_player].update_camera();
 			movement_timer.reset();
 			m_switch = false;
@@ -273,9 +275,6 @@ namespace Crate {
             m_backward = false;
         }
 
-
-        
-        
         if (m_rotate_left){
             players[curr_player].turn_left();
             m_rotate_left = false;
@@ -348,11 +347,10 @@ namespace Crate {
         const Vector3f left = m_view.get_camera().get_left().get_ij().normalized();
         
         /** Get velocity vector split into a number of axes **/
-        if (m_controls.left){
-            cout << __LINE__ << endl;
-        }
+       
         const Vector3f velocity = (m_controls.forward - m_controls.back) * 50.0f * forward
         + (m_controls.left - m_controls.right) * 50.0f * left;
+
         const Vector3f x_vel = velocity.get_i();
         const Vector3f y_vel = velocity.get_j();
         Vector3f z_vel = m_view.get_velocity().get_k();
@@ -406,12 +404,17 @@ namespace Crate {
             partial_step(time_step, z_vel);
             
             /** Keep player above ground; Bookkeeping for jumping controls **/
-            const Point3f &position = m_view.get_camera().position;
-            if(position.z < 50.0f) {
-                m_view.set_position(Point3f(position.x, position.y, 50.0f));
-                m_view.set_on_ground(true);
-            }
+//            const Point3f &position = m_view.get_camera().position;
+//            if(position.z < 50.0f) {
+//                m_view.set_position(Point3f(position.x, position.y, 50.0f));
+//                m_view.set_on_ground(true);
+//            }
         }
+        if (!players[curr_player].has_shot())
+            players[curr_player].update_camera();
+        else
+            update_bullet_camera();
+
     }
     
     void Crate_State::render() {
@@ -540,27 +543,37 @@ namespace Crate {
 		}
     }
     
+    void Crate_State::update_bullet_camera(){
+        auto camera_loc = bullets.back()->get_location();
+        auto velocity = bullets.back()->get_velocity();
+        camera_loc -= velocity.normalize() * 5;
+        static Vector3f previous_vel = velocity;
+        m_view.set_position(camera_loc);
+        m_view.adjust_pitch(previous_vel.angle_between(velocity));
+        previous_vel = velocity;
+    }
+    
     void Crate_State::partial_step(const float &time_step, const Vector3f &velocity) {
-        m_view.set_velocity(velocity);
-        const Point3f backup_position = m_view.get_camera().position;
-        
-        m_view.step(time_step);
-        
-        /** If collision with the crate has occurred, roll things back **/
-        if(players[curr_player].get_body().intersects(m_view.get_body())) {
-            if(m_moved)
-            {
-                /** Play a sound if possible **/
-                players[curr_player].collide();
-                m_moved = false;
-            }
-            
-            m_view.set_position(backup_position);
-            
-            /** Bookkeeping for jumping controls **/
-            if(velocity.k < 0.0f)
-                m_view.set_on_ground(true);
-        }
+//        m_view.set_velocity(velocity);
+//        const Point3f backup_position = m_view.get_camera().position;
+//        
+//        m_view.step(time_step);
+//        
+//        /** If collision with the crate has occurred, roll things back **/
+//        if(players[curr_player].get_body().intersects(m_view.get_body())) {
+//            if(m_moved)
+//            {
+//                /** Play a sound if possible **/
+//                players[curr_player].collide();
+//                m_moved = false;
+//            }
+//            
+//            m_view.set_position(backup_position);
+//            
+//            /** Bookkeeping for jumping controls **/
+//            if(velocity.k < 0.0f)
+//                m_view.set_on_ground(true);
+//        }
     }
     
 }

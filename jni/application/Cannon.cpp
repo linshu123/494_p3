@@ -73,8 +73,17 @@ namespace Crate {
 			loc.z += 15;
 			m_corner = loc;
 		}
+    
+    Zeni::Point3f Cannon::get_cannon_tip(float length){
+        Zeni::Point3f cannon_tip = m_corner;
+//		float length = 25.0f;
+		cannon_tip.x += -1.0f * length * cos(vertical_angle) * cos(horizontal_angle);
+		cannon_tip.y += length * cos(vertical_angle) * sin(horizontal_angle);
+		cannon_tip.z += -length * sin(vertical_angle);
+        return cannon_tip;
+    }
 
-	Projectile * Cannon::fire(float power){
+	Projectile * Cannon::fire(float power, Crate *player){
 
 		
 		float projectile_angle = m_rotation.get_rotation().second;
@@ -82,13 +91,13 @@ namespace Crate {
 		if (vec.k > 0){
 			projectile_angle *= -1;
 		}
-		Zeni::Point3f cannon_tip = m_corner;
-		float length = 25.0f;
-		cannon_tip.x += -1.0f * length * cos(vertical_angle) * cos(horizontal_angle);
-		cannon_tip.y += length * cos(vertical_angle) * sin(horizontal_angle);
-		cannon_tip.z += -length * sin(vertical_angle);
+//		Zeni::Point3f cannon_tip = m_corner;
+//		float length = 25.0f;
+//		cannon_tip.x += -1.0f * length * cos(vertical_angle) * cos(horizontal_angle);
+//		cannon_tip.y += length * cos(vertical_angle) * sin(horizontal_angle);
+//		cannon_tip.z += -length * sin(vertical_angle);
 
-		Projectile *proj = new Projectile(cannon_tip, Vector3f(15.0f, 15.0f, 15.0f), m_rotation, weapon);
+		Projectile *proj = new Projectile(player, get_cannon_tip(), Vector3f(15.0f, 15.0f, 15.0f), m_rotation, weapon);
 		/*
 		float z_velocity = -1.0f * power * sin(vertical_angle);
 		float x_velocity = -1.0f * z_velocity * cos(horizontal_angle);

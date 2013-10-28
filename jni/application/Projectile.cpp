@@ -1,6 +1,7 @@
 #include <zenilib.h>
 
 #include "Projectile.h"
+#include "Crate.h"
 
 using namespace Zeni;
 using namespace Zeni::Collision;
@@ -9,7 +10,8 @@ namespace Crate {
     
 
     
-    Projectile::Projectile(const Point3f &corner_,
+    Projectile::Projectile(Crate * player_,
+                           const Point3f &corner_,
                  const Vector3f &scale_,
                  const Quaternion &rotation_,
 				 weapon_type weap)
@@ -20,7 +22,8 @@ namespace Crate {
 	weapon(weap),
 	detonated(false),
 	times_doubled(0),
-	explosion_radius(0)
+	explosion_radius(0),
+    player(player_)
     {
 		string model_path = "models/";
 
@@ -103,11 +106,13 @@ namespace Crate {
 		//Bounce
 		if (m_corner.z < 0)
 		{
+            player->reset_shot();
 			m_velocity = 0.5f * m_velocity;
 			m_velocity.z = -1.0f * m_velocity.z;
 		}
 		if (m_corner.z < 0 && abs(m_velocity.z) <= 0.5f )
 		{
+            player->reset_shot();
 			m_corner.z = 0;
 			m_velocity.z = 0;
 		}
@@ -155,6 +160,7 @@ namespace Crate {
     }
 
 	void Projectile::detonate(){
+        player->reset_shot();
 		m_velocity = Vector3f(0,0,0);
 		if (times_doubled == 0){
 			delete m_model;
@@ -168,6 +174,7 @@ namespace Crate {
 			explosion_radius = m_scale.x/2;
 			detonated = true;
 		}
+
 	}
     
     Model * Projectile::m_model = 0;

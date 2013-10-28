@@ -32,7 +32,7 @@ namespace Crate {
 
 			void change_loc(Zeni::Point3f);
 
-			Projectile * fire(float);
+			Projectile * fire(float, Crate *);
 
 			float get_vertical_angle(){
 				return vertical_angle;
@@ -49,6 +49,12 @@ namespace Crate {
 			weapon_type get_weapon(){
 				return weapon;
 			}
+        
+            Zeni::Point3f get_position(){
+                return m_corner;
+            }
+        
+        Zeni::Point3f get_cannon_tip(float length = 25.0f);
 
 		private:
 			void create_body();

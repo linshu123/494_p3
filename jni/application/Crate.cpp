@@ -16,7 +16,8 @@ namespace Crate {
     m_corner(corner_),
     m_scale(scale_),
     m_rotation(rotation_),
-	alive(true)
+	alive(true),
+    shot(false)
     {
         if(!m_instance_count)
             m_model = new Model("models/tank_body.3ds");
@@ -82,14 +83,19 @@ namespace Crate {
     }
 
 	void Crate::update_camera(){
-		Point3f cam_position(m_corner);
-		cam_position.x -= 100.0f;
+//		Point3f cam_position(m_corner);
+//		cam_position.x -= 100.0f;
 		//cam_position.y -= 10.0f;
-		cam_position.z -= 30.0f;
+//		cam_position.z = 30.0f;
 
-		m_view.adjust_pitch(-15.0f);
+//		m_view.adjust_pitch(-15.0f);
 
-		m_view.set_position(cam_position);
+//		m_view.set_position(cam_position);
+        Point3f cam_position = cannon.get_cannon_tip(15.0f);
+        cam_position.z += 5.0f;
+        m_view.set_position(cam_position);
+        
+//        m_view.look_at(cannon.get_cannon_tip());
 
 	}
 
@@ -134,8 +140,9 @@ namespace Crate {
 		cannon.rotate_right();
     }
 
-	Projectile * Crate::fire(float power){
-		return cannon.fire(power);
+	Projectile * Crate::fire(float power, Crate *player){
+        shot = true;
+		return cannon.fire(power, player);
 	}
 	
 	void Crate::switch_rotation_angle()
@@ -145,7 +152,9 @@ namespace Crate {
 		cannon.switch_rotation_angle();
 	}
 
-    
+    void Crate::reset_shot(){
+        shot = false;
+    }
     
     Model * Crate::m_model = 0;
     unsigned long Crate::m_instance_count = 0lu;

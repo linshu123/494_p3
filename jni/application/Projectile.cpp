@@ -23,24 +23,33 @@ namespace Crate {
 	detonated(false),
 	times_doubled(0),
 	explosion_radius(0),
-    player(player_)
+    player(player_),
+    damage_done(0)
     {
 		string model_path = "models/";
 
 		switch(weapon){
 			case SPRINKLE:
+                damage = 5;
+                explosion_radius = 100;
 				model_path += "sprinkle.3ds";
 			break;
 
 			case MM:
+                damage = 15;
+                explosion_radius = 70;
 				model_path += "m_and_m.3ds";
 			break;
 
 			case CHOCOLATE:
+                damage = 25;
+                explosion_radius = 50;
 				model_path += "chocolate_chip.3ds";
 			break;
 
 			case CANDLE:
+                damage = 50;
+                explosion_radius = 20;
 				model_path += "candle.3ds";
 			break;
 
@@ -98,7 +107,7 @@ namespace Crate {
 	void Projectile::apply_gravity(float time_step)
 	{
 		
-		float grav_strength = 1.0f * (1 - (m_corner.z / 10000));
+		float grav_strength = 0.5f * (1 - (m_corner.z / 10000));
 		Vector3f gravity(0.0f, 0.0f, -1.0f * grav_strength);
 		m_velocity += gravity;
 		m_corner += m_velocity * time_step;
@@ -106,13 +115,11 @@ namespace Crate {
 		//Bounce
 		if (m_corner.z < 0)
 		{
-            player->reset_shot();
 			m_velocity = 0.5f * m_velocity;
 			m_velocity.z = -1.0f * m_velocity.z;
 		}
 		if (m_corner.z < 0 && abs(m_velocity.z) <= 0.5f )
 		{
-            player->reset_shot();
 			m_corner.z = 0;
 			m_velocity.z = 0;
 		}
@@ -124,7 +131,7 @@ namespace Crate {
 
 	bool Projectile::stopped()
 	{
-		if (m_corner.z == 0.0f && abs(m_velocity.z) <= 0.5f)
+		if (abs(m_velocity.x) + abs(m_velocity.y) + abs(m_velocity.z) <= 0.5f)
 		{
 			if (!detonated)
 				detonate();
@@ -160,7 +167,13 @@ namespace Crate {
     }
 
 	void Projectile::detonate(){
-        player->reset_shot();
+        
+        
+//        auto new_position = get_location() - (get_location() - player->get_corner()).normalize() * 50 + Vector3f(0, 0, 50);
+//        m_view.set_position(new_position);
+        
+//        m_view.look_at(get_location());
+        
 		m_velocity = Vector3f(0,0,0);
 		if (times_doubled == 0){
 			delete m_model;
@@ -170,14 +183,24 @@ namespace Crate {
 		times_doubled++;
 		m_scale *= 1.02;
 
-		if (times_doubled > 100){
-			explosion_radius = m_scale.x/2;
+		if (times_doubled > explosion_radius){
+            player->reset_shot();
 			detonated = true;
 		}
 
 	}
     
+    float Projectile::get_collision_radius(){
+        return m_scale.i / 2;
+    }
+    
+    void Projectile::add_damage_done(int damage_){
+        damage_done += damage_;
+    }
+    
     Model * Projectile::m_model = 0;
     unsigned long Projectile::m_instance_count = 0lu;
+    
+    
     
 }

@@ -12,6 +12,7 @@ const string horizontal_angle_str = "horizontal_angle";
 const string power_str = "power";
 const string movement_str = "movement";
 const string weapon_str = "weapon";
+const string damage_str = "Last damage: ";
 
 
 namespace Crate {
@@ -32,7 +33,7 @@ namespace Crate {
 	m_fire(false),
 	m_switch(false),
 	curr_player(0),
-	num_players(5),
+	num_players(2),
 	cannon_down(false),
 	cannon_left(false),
 	cannon_right(false),
@@ -42,7 +43,8 @@ namespace Crate {
 	switch_rotation(false),
 	switch_weapon(false),
 	camera_reset(false),
-	game_size(Point3f(4096.0f, 4096.0f, 2048.0f))
+	game_size(Point3f(4096.0f, 4096.0f, 2048.0f)),
+    last_damage(0)
 //    current_bullet(nullptr)
     {
 		
@@ -50,19 +52,31 @@ namespace Crate {
 		text_map[vertical_angle_str] = new Text_Box(Point2f(0, 20), Point2f(200, 40), "system_36_800x600", "V angle: ", Color());
 		text_map[horizontal_angle_str] = new Text_Box(Point2f(0, 40), Point2f(200, 60), "system_36_800x600", "H angle: ", Color());
 		text_map[movement_str] = new Text_Box(Point2f(0, 60), Point2f(300, 80), "system_36_800x600", "Movement left: ", Color());
-		
 		text_map[weapon_str] = new Text_Box(Point2f(0, 80), Point2f(300, 100), "system_36_800x600", "Weapon: Sprinkle", Color());
+		text_map[damage_str] = new Text_Box(Point2f(0, 100), Point2f(300, 120), "system_36_800x600", damage_str.c_str(), Color());
 
 		for (auto &pair : text_map){
 			pair.second->give_BG_Renderer(new Widget_Renderer_Color(Color(0,0,0,0)));
 		}
+
+
 		//auto colors = get_Colors();
         
 		for (int i = 0 ; i < num_players + 1; ++i){
-			players.push_back(Crate(Point3f(0.0f + 100 * i, 0.0f + 100 * i, 0.0f),
+			players.push_back(Crate(Point3f(0.0f + 1000 * i, 0.0f + 1000 * i, 0.0f),
               Vector3f(30.0f, 30.0f, 30.0f)));
 		}
+        
         players.erase(players.begin());
+        
+        for (int i = 0; i < num_players; ++i) {
+            stringstream text;
+            text << "Player " << i << " health: 1000";
+            health_map[i] = new Text_Box(Point2f(0, 500 + 30 * i), Point2f(300, 500 + 30 * (i + 1)), "system_36_800x600", text.str().c_str(), Color());
+            health_map[i]->give_BG_Renderer(new Widget_Renderer_Color(Color(0,0,0,0)));
+        }
+
+        health_map[curr_player]->set_text_color(Color(0xFFDC143C));
     
 		// "Sprinkle", "M & M", "Chocolate chip", "Candle"
 		weapon_list.push_back("Sprinkle");
@@ -199,12 +213,17 @@ namespace Crate {
 			increase_power = false;
 		}
 		
-		float pow = shot_power.seconds() * 100.0f;
+		float pow = shot_power.seconds() * 70;
 		if (pow != 0.0f)
 		{
+//            if (pow > 500){
+//                pow = 500;
+//            }
+            pow = std::min(pow, 500.0f);
 			stringstream display_text;
+            display_text << std::setprecision(3);
 			display_text << "Power: ";
-			display_text << (pow/10) << endl;
+			display_text << (pow/5) << endl;
 			text_map[power_str]->set_text(display_text.str().c_str());
 		}
 		if (m_fire)
@@ -247,12 +266,16 @@ namespace Crate {
 		Point3f previous_location = players[curr_player].get_corner();
 
 		if (m_switch){
+            health_map[curr_player]->set_text_color(Color(0xFFFFFFFF));
+            
 			curr_player++;
 			curr_player %= num_players;
 			while (!players[curr_player].is_alive()){
 				curr_player++;
 				curr_player %= num_players;
 			}
+            health_map[curr_player]->set_text_color(Color(0xFFDC143C));
+            
             players[curr_player].reset_shot();
 			players[curr_player].update_camera();
 			movement_timer.reset();
@@ -317,15 +340,26 @@ namespace Crate {
 		}
 		vector<pair<Sphere, Projectile *> > projectile_spheres;
 		for (auto bullet : bullets){
-			projectile_spheres.push_back(make_pair(Sphere(bullet->get_corner(), 7.5), bullet));
+			projectile_spheres.push_back(make_pair(Sphere(bullet->get_corner(), bullet->get_collision_radius()), bullet));
 		}
 
 		//check projectile collisions
 		for (auto &bullet : projectile_spheres){
-			for (auto &sphere : collision_spheres){
-				if (sphere.first.intersects(bullet.first)){
-					sphere.second->die();
+			for (auto iter = collision_spheres.begin(); iter != collision_spheres.end(); ++iter){
+				if (iter->first.intersects(bullet.first)){
+//					sphere.second->die();
+                    bullet.second->set_velocity(Vector3f(0, 0, 0));
+                    iter->second->decrease_health(bullet.second->get_damage());
+                    bullet.second->add_damage_done(bullet.second->get_damage());
 					bullet.second->detonate();
+                    stringstream last_damage_text;
+                    last_damage_text << damage_str << bullet.second->get_damage_done();
+                    text_map[damage_str]->set_text(last_damage_text.str().c_str());
+                    
+                    int player_ind = int(iter - collision_spheres.begin());
+                    stringstream health_text;
+                    health_text << "Player " << player_ind << " health: " << iter->second->get_health();
+                    health_map[player_ind]->set_text(health_text.str().c_str());
 				}
 			}
 		}
@@ -382,15 +416,7 @@ namespace Crate {
 				//Remove stopped bullets
 				if ((*it)->finished_detonating())
 				{
-					//After Detonation see if explosion hit a player
-					Zeni::Collision::Sphere explosion(Sphere((*it)->get_corner(), (*it)->explosion_size()));
-					for (auto &sphere : collision_spheres){
-						if (sphere.first.intersects(explosion)){
-							sphere.second->die();
-						}
-					}
-					
-
+                    m_switch = true;
 					it = bullets.erase(it);
 				}else
 				{
@@ -541,16 +567,32 @@ namespace Crate {
 		for (auto &pair : text_map){
 			pair.second->render();
 		}
+		for (auto &pair : health_map){
+			pair.second->render();
+		}
+        
     }
     
     void Crate_State::update_bullet_camera(){
         auto camera_loc = bullets.back()->get_location();
         auto velocity = bullets.back()->get_velocity();
-        camera_loc -= velocity.normalize() * 5;
-        static Vector3f previous_vel = velocity;
-        m_view.set_position(camera_loc);
-        m_view.adjust_pitch(previous_vel.angle_between(velocity));
-        previous_vel = velocity;
+        
+        camera_loc -= velocity.normalize() * 10;
+//        static Vector3f previous_vel = velocity;
+//        if (bullets.back()->stopped())
+//            return;
+        
+        
+//        m_view.set_position(camera_loc);
+//        m_view.look_at(bullets.back()->get_location());
+        
+        auto new_position = bullets.back()->get_location() - (bullets.back()->get_location() - players[curr_player].get_corner()).normalize() * 50 + Vector3f(0, 0, 50);
+        m_view.set_position(new_position);
+        m_view.look_at(bullets.back()->get_location());        
+        
+//        m_view.adjust_pitch(previous_vel.angle_between(velocity));
+//        previous_vel = velocity;
+        
     }
     
     void Crate_State::partial_step(const float &time_step, const Vector3f &velocity) {

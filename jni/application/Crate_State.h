@@ -73,7 +73,8 @@ namespace Crate {
 		std::vector<std::string> weapon_list;
 		//Zeni::Text_Box display_power;
 		std::map<std::string, Zeni::Text_Box *> text_map;
-//        Projectile * current_bullet;
+        std::map<int, Zeni::Text_Box *> health_map;
+        int last_damage;
     };
     
 }

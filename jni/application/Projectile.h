@@ -49,10 +49,6 @@ namespace Crate {
 		bool finished_detonating(){
 			return detonated;
 		}
-
-		float explosion_size(){
-			return explosion_radius;
-		}
         
         Zeni::Point3f get_location(){
             return m_corner;
@@ -61,7 +57,19 @@ namespace Crate {
         Zeni::Vector3f get_velocity(){
             return m_velocity;
         }
+        
+        int get_damage(){
+            return damage;
+        }
+        
+        float get_collision_radius();
 		
+        int get_damage_done(){
+            return damage_done;
+        }
+        
+        void add_damage_done(int damage_);
+        
 private:
         void create_body();
         
@@ -80,7 +88,7 @@ private:
 		bool detonated;
 		int times_doubled;
 
-		float explosion_radius;
+		int explosion_radius;
 		weapon_type weapon;
         
         // Level 3
@@ -91,6 +99,9 @@ private:
         
         
         Crate *player;
+        
+        int damage;
+        int damage_done;
         
     };
     

@@ -68,6 +68,12 @@ namespace Crate {
         
 		Cannon cannon;
         
+        void decrease_health(int);
+        
+        int get_health(){
+            return health;
+        }
+        
 private:
         void create_body();
         
@@ -98,6 +104,10 @@ private:
         // A stationary Crate has no controls
         
         bool shot;
+        
+        
+        int health;
+        
     };
     
 }

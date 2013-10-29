@@ -17,7 +17,8 @@ namespace Crate {
     m_scale(scale_),
     m_rotation(rotation_),
 	alive(true),
-    shot(false)
+    shot(false),
+    health(1000)
     {
         if(!m_instance_count)
             m_model = new Model("models/tank_body.3ds");
@@ -94,8 +95,7 @@ namespace Crate {
         Point3f cam_position = cannon.get_cannon_tip(15.0f);
         cam_position.z += 5.0f;
         m_view.set_position(cam_position);
-        
-//        m_view.look_at(cannon.get_cannon_tip());
+        m_view.look_at(cannon.get_cannon_tip());
 
 	}
 
@@ -154,6 +154,15 @@ namespace Crate {
 
     void Crate::reset_shot(){
         shot = false;
+    }
+    
+    void Crate::decrease_health(int damage){
+        health -= damage;
+        if (health < 0){
+            die();
+            health = 0;
+        }
+
     }
     
     Model * Crate::m_model = 0;

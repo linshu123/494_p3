@@ -48,12 +48,12 @@ namespace Crate {
 //    current_bullet(nullptr)
     {
 		
-		text_map[power_str] = new Text_Box(Point2f(0, 0), Point2f(200, 20), "system_36_800x600", "Power:", Color());
-		text_map[vertical_angle_str] = new Text_Box(Point2f(0, 20), Point2f(200, 40), "system_36_800x600", "V angle: ", Color());
-		text_map[horizontal_angle_str] = new Text_Box(Point2f(0, 40), Point2f(200, 60), "system_36_800x600", "H angle: ", Color());
-		text_map[movement_str] = new Text_Box(Point2f(0, 60), Point2f(300, 80), "system_36_800x600", "Movement left: ", Color());
-		text_map[weapon_str] = new Text_Box(Point2f(0, 80), Point2f(300, 100), "system_36_800x600", "Weapon: Sprinkle", Color());
-		text_map[damage_str] = new Text_Box(Point2f(0, 100), Point2f(300, 120), "system_36_800x600", damage_str.c_str(), Color());
+		text_map[power_str] = new Text_Box(Point2f(0, 0), Point2f(200, 30), "system_36_800x600", "Power:", Color());
+		text_map[vertical_angle_str] = new Text_Box(Point2f(0, 30), Point2f(200, 60), "system_36_800x600", "V angle: ", Color());
+		text_map[horizontal_angle_str] = new Text_Box(Point2f(0, 60), Point2f(200, 90), "system_36_800x600", "H angle: ", Color());
+		text_map[movement_str] = new Text_Box(Point2f(0, 90), Point2f(300, 120), "system_36_800x600", "Movement left: ", Color());
+		text_map[weapon_str] = new Text_Box(Point2f(0, 120), Point2f(500, 150), "system_36_800x600", "Weapon: Sprinkle", Color());
+		text_map[damage_str] = new Text_Box(Point2f(0, 150), Point2f(300, 180), "system_36_800x600", damage_str.c_str(), Color());
 
 		for (auto &pair : text_map){
 			pair.second->give_BG_Renderer(new Widget_Renderer_Color(Color(0,0,0,0)));
@@ -105,10 +105,12 @@ namespace Crate {
                 break;
                 
             case SDLK_LEFT:
+				cannon_left = event.type == SDL_KEYDOWN;
                 m_rotate_left = event.type == SDL_KEYDOWN;
                 break;
                 
             case SDLK_RIGHT:
+				cannon_right = event.type == SDL_KEYDOWN;
                 m_rotate_right = event.type == SDL_KEYDOWN;
                 break;
                 
@@ -129,10 +131,12 @@ namespace Crate {
 				
             case SDLK_j:
 				cannon_left = event.type == SDL_KEYDOWN;
+                m_rotate_left = event.type == SDL_KEYDOWN;
 				break;
 
 			case SDLK_l:
 				cannon_right = event.type == SDL_KEYDOWN;
+                m_rotate_right = event.type == SDL_KEYDOWN;
 				break;
             case SDLK_w:
 //                m_controls.forward = event.type == SDL_KEYDOWN;
@@ -177,10 +181,10 @@ namespace Crate {
         }
     }
     
-    void Crate_State::on_mouse_motion(const SDL_MouseMotionEvent &event) {
-        m_view.adjust_pitch(event.yrel / 500.0f);
-        m_view.turn_left_xy(-event.xrel / 500.0f);
-    }
+//    void Crate_State::on_mouse_motion(const SDL_MouseMotionEvent &event) {
+//        m_view.adjust_pitch(event.yrel / 500.0f);
+//        m_view.turn_left_xy(-event.xrel / 500.0f);
+//    }
     
     void Crate_State::perform_logic() {
         const Time_HQ current_time = get_Timer_HQ().get_time();
@@ -192,9 +196,7 @@ namespace Crate {
 
 		if (switch_weapon){
 			players[curr_player].cannon.switch_weapon();
-			stringstream weapon_text;
-			weapon_text << "Weapon: " << weapon_list[players[curr_player].cannon.get_weapon()];
-			text_map[weapon_str]->set_text(weapon_text.str().c_str());
+            set_weapon_text();
 			switch_weapon = false;
 		}
 
@@ -245,7 +247,7 @@ namespace Crate {
 
 		stringstream horizontal_angle_text;
 		horizontal_angle_text << std::setprecision(5);
-		horizontal_angle_text << "V angle: " << int(players[curr_player].cannon.get_horizontal_angle() / 3.14 * 180) % 360 ;
+		horizontal_angle_text << "H angle: " << int(players[curr_player].cannon.get_horizontal_angle() / 3.14 * 180) % 360 ;
 		text_map[horizontal_angle_str]->set_text(horizontal_angle_text.str().c_str());
 
 		stringstream movement_text;
@@ -279,8 +281,8 @@ namespace Crate {
             players[curr_player].reset_shot();
 			players[curr_player].update_camera();
 			movement_timer.reset();
+            set_weapon_text();
 			m_switch = false;
-			
 		}
         
         if (m_forward && movement_timer.seconds() <= total_movement){
@@ -616,6 +618,12 @@ namespace Crate {
 //            if(velocity.k < 0.0f)
 //                m_view.set_on_ground(true);
 //        }
+    }
+    
+    void Crate_State::set_weapon_text(){
+        stringstream weapon_text;
+        weapon_text << "Weapon: " << weapon_list[players[curr_player].cannon.get_weapon()];
+        text_map[weapon_str]->set_text(weapon_text.str().c_str());
     }
     
 }

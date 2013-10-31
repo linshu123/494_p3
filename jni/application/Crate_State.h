@@ -29,7 +29,7 @@ namespace Crate {
         void on_push();
         
         void on_key(const SDL_KeyboardEvent &event);
-        void on_mouse_motion(const SDL_MouseMotionEvent &event);
+//        void on_mouse_motion(const SDL_MouseMotionEvent &event);
         
         void perform_logic();
         
@@ -40,9 +40,10 @@ namespace Crate {
     private:
         void partial_step(const float &time_step, const Zeni::Vector3f &velocity);
         
+        void set_weapon_text();
+        
         Zeni::Time_HQ time_passed;
         
-//        Crate m_tank;
 		std::vector<Crate> players;
 		std::list<Projectile*> bullets;
 		//std::list<int> tree;

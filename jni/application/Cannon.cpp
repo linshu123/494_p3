@@ -21,7 +21,7 @@ namespace Crate {
 			++m_instance_count;
 
 			horizontal_angle = 0.0f;
-			vertical_angle = 0.0f;
+			vertical_angle = -15.0f / 180 * 3.14;
 
 			rotation_angle = 3.14/180.0f;
 

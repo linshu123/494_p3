@@ -4,7 +4,7 @@
 
 using namespace Zeni;
 using namespace Zeni::Collision;
-
+using namespace std;
 namespace Crate {
     
 
@@ -64,9 +64,11 @@ namespace Crate {
     
     void Crate::move_forward(){
 		
+        
 		float angle = m_rotation.get_rotation().second;
-
-		Vector3f vec = cannon_rotation.get_rotation().first;
+        cout << angle << endl;
+        cout << m_rotation.get_rotation().first.z;
+		Vector3f vec = m_rotation.get_rotation().first;
 		if (vec.k > 0){
 			angle *= -1;
 		}
@@ -92,10 +94,10 @@ namespace Crate {
 //		m_view.adjust_pitch(-15.0f);
 
 //		m_view.set_position(cam_position);
-        Point3f cam_position = cannon.get_cannon_tip(15.0f);
+        Point3f cam_position = cannon.get_cannon_tip(8.0f);
         cam_position.z += 5.0f;
         m_view.set_position(cam_position);
-        m_view.look_at(cannon.get_cannon_tip());
+        m_view.look_at(cannon.get_cannon_tip(15.0f));
 
 	}
 
@@ -122,11 +124,11 @@ namespace Crate {
     
     void Crate::turn_left(){
         m_rotation = Zeni::Quaternion::Axis_Angle(Zeni::Vector3f(0, 0, 1), rotation_angle) * m_rotation;
-        cannon_rotation = Zeni::Quaternion::Axis_Angle(Zeni::Vector3f(0, 0, 1), rotation_angle) * cannon_rotation;
+//        cannon_rotation = Zeni::Quaternion::Axis_Angle(Zeni::Vector3f(0, 0, 1), rotation_angle) * cannon_rotation;
 
 		horizontal_angle += rotation_angle;
 
-		cannon.rotate_left();
+//		cannon.rotate_left();
 
 		//m_view.adjust_pitch
         
@@ -134,10 +136,10 @@ namespace Crate {
     
     void Crate::turn_right(){
         m_rotation = Zeni::Quaternion::Axis_Angle(Zeni::Vector3f(0, 0, 1), -rotation_angle) * m_rotation;
-        cannon_rotation = Zeni::Quaternion::Axis_Angle(Zeni::Vector3f(0, 0, 1), -rotation_angle) * cannon_rotation;
+//        cannon_rotation = Zeni::Quaternion::Axis_Angle(Zeni::Vector3f(0, 0, 1), -rotation_angle) * cannon_rotation;
 
 		horizontal_angle -= rotation_angle;
-		cannon.rotate_right();
+//		cannon.rotate_right();
     }
 
 	Projectile * Crate::fire(float power, Crate *player){
